@@ -1,18 +1,18 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Chart, ColumnSeries, Category } from '@syncfusion/ej2-charts';
+	import { Chart, ColumnSeries, Category, Legend } from '@syncfusion/ej2-charts';
 	import { Browser } from '@syncfusion/ej2-base';
-	Chart.Inject(ColumnSeries, Category);
-  
+	Chart.Inject(ColumnSeries, Category, Legend);
+
 	onMount(async () => {
 	  // Make an HTTP request to fetch data from the API
 	  const apiUrl = 'https://api.recruitly.io/api/dashboard/sales/data/opportunitymonthlyusermetrics?start=01%2F10%2F2022&end=01%2F10%2F2023&apiKey=TEST45684CB2A93F41FC40869DC739BD4D126D77';
 	  const response = await fetch(apiUrl);
 	  const data = await response.json();
-  
+
 	  // Define an array to store user names for the horizontal axis
-	  const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
-  
+	  const users = ['Bob Shaw','Andy Barnes', 'Gary Williams'];
+
 	  // Process the API response data to format it for the chart
 	  const chartData = users.map(userName => ({
 		name: userName,
@@ -29,7 +29,7 @@
 		},
 		primaryYAxis: {
 		  labelFormat: '{value}',
-		  title: 'Oppurtunity Value',
+		  title: 'Opportunity Value',
 		  edgeLabelPlacement: 'Shift',
 		  majorTickLines: { width: 0 },
 		  lineStyle: { width: 0 },
@@ -43,15 +43,16 @@
 		  name: userData.name,
 		  columnSpacing: 0.1,
 		})),
+		legendSettings: {
+		  visible: true,
+		},
 	  });
-  
+
 	  chart.appendTo('#container');
 	});
-  </script>
-  
-  <body>
-	<h2>Oppurtunity Value by User</h2>
+</script>
+
+<body>
+	<h2>Opportunity Value by User</h2>
 	<div id='container'></div>
-	
-  </body>
-  
+</body>
