@@ -10,12 +10,18 @@
 	  const response = await fetch(apiUrl);
 	  const data = await response.json();
   
+	  // Define an array to store user names for the horizontal axis
+	  const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
+  
 	  // Process the API response data to format it for the chart
-	  const chartData = data.map(item => ({
-		x: item.monthLabel,  // Assuming "monthLabel" is the X-axis value
-		y: item['Andy Barnes']  // Use the name of the series as the Y-axis value
+	  const chartData = users.map(userName => ({
+		name: userName,
+		data: data.map(item => ({
+		  x: item.monthLabel,
+		  y: item[userName]
+		}))
 	  }));
-      console.log(chartData);
+	  console.log(chartData);
 	  const chart = new Chart({
 		primaryXAxis: {
 		  valueType: 'Category',
@@ -23,22 +29,20 @@
 		},
 		primaryYAxis: {
 		  labelFormat: '{value}',
-		  title: 'Oppurtunity Value ',
+		  title: 'Oppurtunity Value',
 		  edgeLabelPlacement: 'Shift',
 		  majorTickLines: { width: 0 },
 		  lineStyle: { width: 0 },
 		},
-		series: [
-		  {
-			type: 'Column',
-			dataSource: chartData,
-			xName: 'x',
-			width: 2,
-			yName: 'y',
-			name: 'Andy Barnes',
-			columnSpacing: 0.1,
-		  },
-		],
+		series: chartData.map(userData => ({
+		  type: 'Column',
+		  dataSource: userData.data,
+		  xName: 'x',
+		  width: 2,
+		  yName: 'y',
+		  name: userData.name,
+		  columnSpacing: 0.1,
+		})),
 	  });
   
 	  chart.appendTo('#container');
@@ -48,12 +52,6 @@
   <body>
 	<h2>Oppurtunity Value by User</h2>
 	<div id='container'></div>
+	
   </body>
-  
-  <style>
-	h2 {
-    text-align: center;
-    margin: 20px 0;
-  }
-  </style>
   
