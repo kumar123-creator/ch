@@ -15,7 +15,7 @@
 		opportunities: item.opportunities,
 		days: item.days
 	  }));
-  
+  console.log(chartDataDays);
 	  const chartDays = new Chart({
 		primaryXAxis: {
 		  valueType: 'Category',
@@ -49,7 +49,7 @@
 			  visible: true,
 			  height: 10,
 			  width: 10,
-			}
+			},
 		  }
 		],
 		axes: [
@@ -84,7 +84,7 @@
 		  y: item[userName]
 		}))
 	  }));
-  
+     console.log(chartDataOpportunity);
 	  const chartOpportunity = new Chart({
 		primaryXAxis: {
 		  valueType: 'Category',
