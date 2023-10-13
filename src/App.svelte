@@ -9,13 +9,16 @@
 	  const apiUrlDays = 'https://api.recruitly.io/api/dashboard/sales/data/opportunitymonthlymetrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=TEST45684CB2A93F41FC40869DC739BD4D126D77';
 	  const responseDays = await fetch(apiUrlDays);
 	  const dataDays = await responseDays.json();
-  
+	  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 	  const chartDataDays = dataDays.map(item => ({
-		x: item.monthLabel,
+		x: monthNames[parseInt(item.monthLabel.split('/')[0]) - 1],
 		opportunities: item.opportunities,
 		days: item.days
 	  }));
-  console.log(chartDataDays);
+	      // Sort the chart data by month order
+		  chartDataDays.sort((a, b) => monthNames.indexOf(a.x) - monthNames.indexOf(b.x));
+      console.log(chartDataDays);
 	  const chartDays = new Chart({
 		primaryXAxis: {
 		  valueType: 'Category',
@@ -80,10 +83,12 @@
 	  const chartDataOpportunity = users.map(userName => ({
 		name: userName,
 		data: dataOpportunity.map(item => ({
-		  x: item.monthLabel,
+			x: monthNames[parseInt(item.monthLabel.split('/')[0]) - 1], 
 		  y: item[userName]
 		}))
 	  }));
+        // Sort the chart data by month order
+		  chartDataOpportunity.sort((a, b) => monthNames.indexOf(a.x) - monthNames.indexOf(b.x));
      console.log(chartDataOpportunity);
 	  const chartOpportunity = new Chart({
 		primaryXAxis: {
