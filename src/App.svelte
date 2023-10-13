@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip } from '@syncfusion/ej2-charts';
+	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries } from '@syncfusion/ej2-charts';
 	import { Browser } from '@syncfusion/ej2-base';
-	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip);
+	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries);
   
 	onMount(async () => {
 	  // Code for the "Deal Lifecycle Days" chart
@@ -39,7 +39,7 @@
 			columnSpacing: 0.1,
 		  },
 		  {
-			type: 'Line',
+			type: 'Spline',
 			dataSource: chartDataDays,
 			xName: 'x',
 			yName: 'days',
