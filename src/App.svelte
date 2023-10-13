@@ -43,7 +43,7 @@
 			dataSource: chartDataDays,
 			xName: 'x',
 			yName: 'days',
-			name: 'Days',
+			name: 'Avg Days to Deal',
 			yAxisName: 'rightYAxis',
 			marker: {
 			  visible: true,
