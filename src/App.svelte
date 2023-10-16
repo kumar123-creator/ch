@@ -186,10 +186,11 @@ function sortChartDataByMonth(data) {
 	}
   
 	.card {
-	  width: 200px; /* Set the width to the desired size */
-	  height: 200px; /* Set the height to the desired size */
-	  margin: 10px; /* Add some margin between cards if needed */
-	}
+    flex: 1; /* Set the flex property to distribute the cards evenly */
+    max-width: 300px; /* Set the maximum width for the cards */
+    margin: 10px;
+  }
+
   </style>
   
   <body>
