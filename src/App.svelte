@@ -4,6 +4,8 @@
 	import { Browser } from '@syncfusion/ej2-base';
 	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries);
 	import Card from './Card.svelte';
+	import { format, parse, compareAsc } from 'date-fns';
+
   
 	const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales/data';
     const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
@@ -25,21 +27,37 @@
 	  console.error('Error fetching data:', error);
 	}
   });
+
+  function generateMonthNames(data) {
+  return data.map(item => {
+    const dateParts = item.monthLabel.split('/');
+    const month = parseInt(dateParts[0]) - 1;
+    const year = parseInt(dateParts[1]);
+    const date = new Date(year, month, 1);
+    return format(date, 'MMMM yyyy');
+  });
+}
+
+function sortChartDataByMonth(data) {
+  return data.sort((a, b) => {
+    const dateA = parse(a.monthLabel, 'MM/yyyy', new Date());
+    const dateB = parse(b.monthLabel, 'MM/yyyy', new Date());
+    return dateA - dateB;
+  });
+}
+
 	onMount(async () => {
 	  // Code for the "Deal Lifecycle Days" chart
 	  const apiUrlDays = `${API_BASE_URL}/opportunitymonthlymetrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=${API_KEY}`;
 	  const responseDays = await fetch(apiUrlDays);
 	  const dataDays = await responseDays.json();
-	  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-	  const chartDataDays = dataDays.map(item => ({
-		x: monthNames[parseInt(item.monthLabel.split('/')[0]) - 1],
-		opportunities: item.opportunities,
-		days: item.days
-	  }));
-	      // Sort the chart data by month order
-		  chartDataDays.sort((a, b) => monthNames.indexOf(a.x) - monthNames.indexOf(b.x));
+	  const chartDataDays = sortChartDataByMonth(dataDays).map(item => ({
+        x: format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy'),
+        opportunities: item.opportunities,
+        days: item.days
+     }));
       console.log(chartDataDays);
+	  
 	  const chartDays = new Chart({
 		primaryXAxis: {
 		  valueType: 'Category',
@@ -93,23 +111,32 @@
 	  });
   
 	  chartDays.appendTo('#chart-container-days');
-  
+	  
+	  function sortChartDataOpportunity(chartDataOpportunity) {
+  return chartDataOpportunity.map(userData => ({
+    name: userData.name,
+    data: userData.data.sort((a, b) => {
+      const dateA = parse(a.x, 'MM/yyyy', new Date());
+      const dateB = parse(b.x, 'MM/yyyy', new Date());
+      return dateA - dateB;
+    }),
+  }));
+}
+
 	  // Code for the "Opportunity Value by User" chart
 	  const apiUrlOpportunity = `${API_BASE_URL}/opportunitymonthlyusermetrics?start=01%2F10%2F2022&end=01%2F10%2F2023&apiKey=${API_KEY}`;
 	  const responseOpportunity = await fetch(apiUrlOpportunity);
 	  const dataOpportunity = await responseOpportunity.json();
-  
 	  const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
-  
 	  const chartDataOpportunity = users.map(userName => ({
 		name: userName,
 		data: dataOpportunity.map(item => ({
-			x: monthNames[parseInt(item.monthLabel.split('/')[0]) - 1], 
+			  x: format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy'),
 		  y: item[userName]
 		}))
 	  }));
-        // Sort the chart data by month order
-		  chartDataOpportunity.sort((a, b) => monthNames.indexOf(a.x) - monthNames.indexOf(b.x));
+	  const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
+
      console.log(chartDataOpportunity);
 	  const chartOpportunity = new Chart({
 		primaryXAxis: {
@@ -123,15 +150,15 @@
 		  majorTickLines: { width: 0 },
 		  lineStyle: { width: 0 },
 		},
-		series: chartDataOpportunity.map(userData => ({
-		  type: 'Column',
-		  dataSource: userData.data,
-		  xName: 'x',
-		  width: 2,
-		  yName: 'y',
-		  name: userData.name,
-		  columnSpacing: 0.1,
-		})),
+		series: sortedChartDataOpportunity.map(userData => ({
+    type: 'Column',
+    dataSource: userData.data,
+    xName: 'x',
+    width: 2,
+    yName: 'y',
+    name: userData.name,
+    columnSpacing: 0.1,
+  })),
 		legendSettings: {
 		  visible: true,
 		},
