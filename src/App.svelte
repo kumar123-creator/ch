@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries } from '@syncfusion/ej2-charts';
+	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries } from '@syncfusion/ej2-charts';
 	import { Browser } from '@syncfusion/ej2-base';
-	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries);
+	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries);
 	import Card from './Card.svelte';
 	import { format, parse, compareAsc } from 'date-fns';
 
@@ -169,6 +169,45 @@ function sortChartDataByMonth(data) {
   
 	  chartOpportunity.appendTo('#chart-container-opportunity');
 	});
+
+	onMount(async () => {
+		// Fetch data and update chartData for Opportunity State Reasons
+		const apiUrlStateReasons = 'https://api.recruitly.io/api/dashboard/sales/data/opportunity/statereasons?start=01%2F01%2F2023&end=17%2F10%2F2023&apiKey=TEST45684CB2A93F41FC40869DC739BD4D126D77';
+		const responseStateReasons = await fetch(apiUrlStateReasons);
+		const dataStateReasons = await responseStateReasons.json();
+
+		// Process the API response data for the Opportunity State Reasons chart
+		const chartDataStateReasons = dataStateReasons.map(item => ({
+			x: item.stateReason,
+			y: item.count
+		}));
+
+		const chartStateReasons = new Chart({
+			primaryXAxis: {
+				valueType: 'Category',
+				majorGridLines: { width: 0 }
+			},
+			primaryYAxis: {
+				labelFormat: '{value}',
+				edgeLabelPlacement: 'Shift',
+				majorTickLines: { width: 0 },
+				lineStyle: { width: 0 },
+			},
+			series: [
+				{
+					type: 'Bar',
+					dataSource: chartDataStateReasons,
+					xName: 'x',
+					width: 2,
+					yName: 'y',
+					name: 'Count',
+					columnSpacing: 0.1,
+				},
+			],
+		});
+
+		chartStateReasons.appendTo('#chart-container-state-reasons');
+	});
   </script>
   
   <style>
@@ -188,7 +227,7 @@ function sortChartDataByMonth(data) {
 	.card {
     flex: 1; /* Set the flex property to distribute the cards evenly */
     max-width: 300px; /* Set the maximum width for the cards */
-    margin: 10px;
+    margin: 5px;
   }
 
   </style>
@@ -227,6 +266,11 @@ function sortChartDataByMonth(data) {
 	<div class="chart-card">
 	  <h2>Opportunity Value by User</h2>
 	  <div id='chart-container-opportunity'></div>
+	</div>
+
+	<div class="chart-card">
+		<h2>Opportunity State Reasons</h2>
+		<div id='chart-container-state-reasons'></div>
 	</div>
   </body>
   
