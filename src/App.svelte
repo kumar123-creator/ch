@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+  import { DateRangePicker } from '@syncfusion/ej2-calendars';
 	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries } from '@syncfusion/ej2-charts';
 	import { Browser } from '@syncfusion/ej2-base';
 	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries);
@@ -7,15 +8,23 @@
 	import { format, parse, compareAsc } from 'date-fns';
 
   
-	const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales/data';
+	  const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
     const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
 
   let data = null;
+  let daterangepicker;
+
+  onMount(() => {
+    daterangepicker = new DateRangePicker({
+      placeholder: "Select a range",
+    });
+    daterangepicker.appendTo('#daterangepicker');
+  });
 
   onMount(async () => {
 	try {
 	  const response = await fetch(
-		'https://api.recruitly.io/api/dashboard/sales/metrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=TEST45684CB2A93F41FC40869DC739BD4D126D77',
+      `${API_BASE_URL}/metrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=${API_KEY}`,
 		{
 		  headers: {
 			'Cookie': 'SESSION=NTkwN2VlOWQtZjRlNi00NmQ4LWE4MTUtOTJhNT71YjA0ZWMx',
@@ -48,7 +57,7 @@ function sortChartDataByMonth(data) {
 
 	onMount(async () => {
 	  // Code for the "Deal Lifecycle Days" chart
-	  const apiUrlDays = `${API_BASE_URL}/opportunitymonthlymetrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=${API_KEY}`;
+	  const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=${API_KEY}`;
 	  const responseDays = await fetch(apiUrlDays);
 	  const dataDays = await responseDays.json();
 	  const chartDataDays = sortChartDataByMonth(dataDays).map(item => ({
@@ -124,7 +133,7 @@ function sortChartDataByMonth(data) {
 }
 
 	  // Code for the "Opportunity Value by User" chart
-	  const apiUrlOpportunity = `${API_BASE_URL}/opportunitymonthlyusermetrics?start=01%2F10%2F2022&end=01%2F10%2F2023&apiKey=${API_KEY}`;
+	  const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=01%2F10%2F2022&end=01%2F10%2F2023&apiKey=${API_KEY}`;
 	  const responseOpportunity = await fetch(apiUrlOpportunity);
 	  const dataOpportunity = await responseOpportunity.json();
 	  const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
@@ -172,16 +181,15 @@ function sortChartDataByMonth(data) {
 
 	onMount(async () => {
 		// Fetch data and update chartData for Opportunity State Reasons
-		const apiUrlStateReasons = 'https://api.recruitly.io/api/dashboard/sales/data/opportunity/statereasons?start=01%2F01%2F2023&end=17%2F10%2F2023&apiKey=TEST45684CB2A93F41FC40869DC739BD4D126D77';
+		const apiUrlStateReasons = `${API_BASE_URL}/data/opportunity/statereasons?start=01%2F10%2F2022&end=17%2F10%2F2023&apiKey=${API_KEY}`;
 		const responseStateReasons = await fetch(apiUrlStateReasons);
 		const dataStateReasons = await responseStateReasons.json();
-
 		// Process the API response data for the Opportunity State Reasons chart
 		const chartDataStateReasons = dataStateReasons.map(item => ({
 			x: item.stateReason,
 			y: item.count
 		}));
-
+    console.log(chartDataStateReasons);
 		const chartStateReasons = new Chart({
 			primaryXAxis: {
 				valueType: 'Category',
@@ -211,6 +219,17 @@ function sortChartDataByMonth(data) {
   </script>
   
   <style>
+
+.center-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    margin-top: 60px;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
 	.chart-card {
 	  border: 1px solid #ccc;
 	  border-radius: 8px;
@@ -222,6 +241,7 @@ function sortChartDataByMonth(data) {
 	  display: flex;
 	  flex-wrap: wrap;
 	  justify-content: center;
+    margin-top: 100px;
 	}
   
 	.card {
@@ -231,7 +251,11 @@ function sortChartDataByMonth(data) {
   }
 
   </style>
-  
+  <div class="center-container">
+    <div id="wrapper">
+      <input id="daterangepicker" type="text" /><br/><br/>
+    </div>
+  </div>
   <body>
 	<main>
 	{#if data}
@@ -273,4 +297,3 @@ function sortChartDataByMonth(data) {
 		<div id='chart-container-state-reasons'></div>
 	</div>
   </body>
-  
