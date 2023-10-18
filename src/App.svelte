@@ -13,29 +13,50 @@
 
   let data = null;
   let daterangepicker;
+  let selectedStartDate = null;
+  let selectedEndDate = null;
 
   onMount(() => {
-    daterangepicker = new DateRangePicker({
+    const daterangepicker = new DateRangePicker({
       placeholder: "Select a range",
+      change: (args) => {
+        if (args.value && args.value.length === 2) {
+          selectedStartDate = args.value[0];
+          selectedEndDate = args.value[1];
+          fetchData(); // Call your API function here
+          fetchOpportunityChartData();
+          fetchOpportunityValueByUserChartData();
+          fetchOpportunityStateReasonsChartData();
+        }
+      }
     });
     daterangepicker.appendTo('#daterangepicker');
   });
 
-  onMount(async () => {
-	try {
-	  const response = await fetch(
-      `${API_BASE_URL}/metrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=${API_KEY}`,
-		{
-		  headers: {
-			'Cookie': 'SESSION=NTkwN2VlOWQtZjRlNi00NmQ4LWE4MTUtOTJhNT71YjA0ZWMx',
-		  },
-		}
-	  );
-	  data = await response.json();
-	} catch (error) {
-	  console.error('Error fetching data:', error);
-	}
-  });
+  async function fetchData() {
+    if (!selectedStartDate || !selectedEndDate) {
+      return; // Handle the case when the date range is not selected
+    }
+
+    const startDate = format(selectedStartDate, 'MM/dd/yyyy');
+    const endDate = format(selectedEndDate, 'MM/dd/yyyy');
+
+    try {
+      // Use startDate and endDate in your API calls
+      const response = await fetch(
+        `${API_BASE_URL}/metrics?start=${startDate}&end=${endDate}&apiKey=${API_KEY}`,
+        {
+          headers: {
+            'Cookie': 'SESSION=NTkwN2VlOWQtZjRlNi00NmQ4LWE4MTUtOTJhNT71YjA0ZWMx',
+          },
+        }
+      );
+      data = await response.json();
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+console.log(data);
 
   function generateMonthNames(data) {
   return data.map(item => {
@@ -55,12 +76,12 @@ function sortChartDataByMonth(data) {
   });
 }
 
-	onMount(async () => {
-	  // Code for the "Deal Lifecycle Days" chart
-	  const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=01%2F01%2F2023&end=11%2F10%2F2023&apiKey=${API_KEY}`;
-	  const responseDays = await fetch(apiUrlDays);
-	  const dataDays = await responseDays.json();
-	  const chartDataDays = sortChartDataByMonth(dataDays).map(item => ({
+async function fetchOpportunityChartData() {
+    // Use selectedStartDate and selectedEndDate in the API call
+    const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${format(selectedStartDate, 'MM/dd/yyyy')}&end=${format(selectedEndDate, 'MM/dd/yyyy')}&apiKey=${API_KEY}`;
+    const responseDays = await fetch(apiUrlDays);
+    const dataDays = await responseDays.json();
+    const chartDataDays = sortChartDataByMonth(dataDays).map(item => ({
         x: format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy'),
         opportunities: item.opportunities,
         days: item.days
@@ -120,8 +141,8 @@ function sortChartDataByMonth(data) {
 	  });
   
 	  chartDays.appendTo('#chart-container-days');
-	  
-	  function sortChartDataOpportunity(chartDataOpportunity) {
+  }
+  function sortChartDataOpportunity(chartDataOpportunity) {
   return chartDataOpportunity.map(userData => ({
     name: userData.name,
     data: userData.data.sort((a, b) => {
@@ -131,12 +152,12 @@ function sortChartDataByMonth(data) {
     }),
   }));
 }
-
-	  // Code for the "Opportunity Value by User" chart
-	  const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=01%2F10%2F2022&end=01%2F10%2F2023&apiKey=${API_KEY}`;
-	  const responseOpportunity = await fetch(apiUrlOpportunity);
-	  const dataOpportunity = await responseOpportunity.json();
-	  const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
+  async function fetchOpportunityValueByUserChartData() {
+    // Use selectedStartDate and selectedEndDate in the API call
+    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${format(selectedStartDate, 'MM/dd/yyyy')}&end=${format(selectedEndDate, 'MM/dd/yyyy')}&apiKey=${API_KEY}`;
+    const responseOpportunity = await fetch(apiUrlOpportunity);
+    const dataOpportunity = await responseOpportunity.json();
+    const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
 	  const chartDataOpportunity = users.map(userName => ({
 		name: userName,
 		data: dataOpportunity.map(item => ({
@@ -147,6 +168,7 @@ function sortChartDataByMonth(data) {
 	  const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
 
      console.log(chartDataOpportunity);
+  
 	  const chartOpportunity = new Chart({
 		primaryXAxis: {
 		  valueType: 'Category',
@@ -177,14 +199,14 @@ function sortChartDataByMonth(data) {
 	  });
   
 	  chartOpportunity.appendTo('#chart-container-opportunity');
-	});
-
-	onMount(async () => {
-		// Fetch data and update chartData for Opportunity State Reasons
-		const apiUrlStateReasons = `${API_BASE_URL}/data/opportunity/statereasons?start=01%2F10%2F2022&end=17%2F10%2F2023&apiKey=${API_KEY}`;
-		const responseStateReasons = await fetch(apiUrlStateReasons);
-		const dataStateReasons = await responseStateReasons.json();
-		// Process the API response data for the Opportunity State Reasons chart
+	};
+  
+  async function fetchOpportunityStateReasonsChartData() {
+    // Use selectedStartDate and selectedEndDate in the API call
+    const apiUrlStateReasons = `${API_BASE_URL}/data/opportunity/statereasons?start=${format(selectedStartDate, 'MM/dd/yyyy')}&end=${format(selectedEndDate, 'MM/dd/yyyy')}&apiKey=${API_KEY}`;
+    const responseStateReasons = await fetch(apiUrlStateReasons);
+    const dataStateReasons = await responseStateReasons.json();
+    // Process the API response data for the Opportunity State Reasons chart
 		const chartDataStateReasons = dataStateReasons.map(item => ({
 			x: item.stateReason,
 			y: item.count
@@ -215,7 +237,8 @@ function sortChartDataByMonth(data) {
 		});
 
 		chartStateReasons.appendTo('#chart-container-state-reasons');
-	});
+	};
+  
   </script>
   
   <style>
