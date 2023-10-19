@@ -13,33 +13,61 @@
 
   let data = null;
   let daterangepicker;
-  let selectedStartDate = null;
-  let selectedEndDate = null;
+  let selectedStartDate = new Date(); // Today's date
+  let selectedEndDate = new Date(); // Today's date
 
-  onMount(() => {
-    const daterangepicker = new DateRangePicker({
-      placeholder: "Select a range",
-      change: (args) => {
-        if (args.value && args.value.length === 2) {
-          selectedStartDate = args.value[0];
-          selectedEndDate = args.value[1];
-          fetchData(); // Call your API function here
-          fetchOpportunityChartData();
-          fetchOpportunityValueByUserChartData();
-          fetchOpportunityStateReasonsChartData();
-        }
+  // Calculate the start date (one year before today)
+  selectedStartDate.setFullYear(selectedStartDate.getFullYear() - 1);
+
+  onMount(async () => {
+  // Check if a date range is stored in local storage
+  const storedStartDate = localStorage.getItem('selectedStartDate');
+  const storedEndDate = localStorage.getItem('selectedEndDate');
+
+  if (storedStartDate && storedEndDate) {
+    selectedStartDate = new Date(storedStartDate);
+    selectedEndDate = new Date(storedEndDate);
+  } else {
+    // If no date range is found in local storage, use the default date range
+    selectedStartDate = new Date();
+    selectedEndDate = new Date();
+    selectedStartDate.setFullYear(selectedStartDate.getFullYear() - 1);
+  }
+
+  const daterangepicker = new DateRangePicker({
+    placeholder: 'Select a range',
+    value: [selectedStartDate, selectedEndDate],
+    change: (args) => {
+      if (args.value && args.value.length === 2) {
+        selectedStartDate = args.value[0];
+        selectedEndDate = args.value[1];
+        localStorage.setItem('selectedStartDate', selectedStartDate);
+        localStorage.setItem('selectedEndDate', selectedEndDate);
+        fetchData();
+        fetchOpportunityChartData();
+        fetchOpportunityValueByUserChartData();
+        fetchOpportunityStateReasonsChartData();
       }
-    });
-    daterangepicker.appendTo('#daterangepicker');
+    },
   });
+
+  daterangepicker.appendTo('#daterangepicker');
+
+  // Call data-fetching functions with the selected date range
+  await fetchData();
+  await fetchOpportunityChartData();
+  await fetchOpportunityValueByUserChartData();
+  await fetchOpportunityStateReasonsChartData();
+});
+
 
   async function fetchData() {
     if (!selectedStartDate || !selectedEndDate) {
       return; // Handle the case when the date range is not selected
     }
 
-    const startDate = format(selectedStartDate, 'MM/dd/yyyy');
-    const endDate = format(selectedEndDate, 'MM/dd/yyyy');
+    const startDate = format(selectedStartDate, 'dd/MM/yyyy');
+    const endDate = format(selectedEndDate, 'dd/MM/yyyy');
 
     try {
       // Use startDate and endDate in your API calls
@@ -78,7 +106,7 @@ function sortChartDataByMonth(data) {
 
 async function fetchOpportunityChartData() {
     // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${format(selectedStartDate, 'MM/dd/yyyy')}&end=${format(selectedEndDate, 'MM/dd/yyyy')}&apiKey=${API_KEY}`;
+    const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
     const responseDays = await fetch(apiUrlDays);
     const dataDays = await responseDays.json();
     const chartDataDays = sortChartDataByMonth(dataDays).map(item => ({
@@ -117,6 +145,7 @@ async function fetchOpportunityChartData() {
 			yName: 'days',
 			name: 'Avg Days to Deal',
 			yAxisName: 'rightYAxis',
+      fill: 'blue',
 			marker: {
 			  visible: true,
 			  height: 10,
@@ -154,7 +183,7 @@ async function fetchOpportunityChartData() {
 }
   async function fetchOpportunityValueByUserChartData() {
     // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${format(selectedStartDate, 'MM/dd/yyyy')}&end=${format(selectedEndDate, 'MM/dd/yyyy')}&apiKey=${API_KEY}`;
+    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
     const responseOpportunity = await fetch(apiUrlOpportunity);
     const dataOpportunity = await responseOpportunity.json();
     const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
@@ -203,7 +232,7 @@ async function fetchOpportunityChartData() {
   
   async function fetchOpportunityStateReasonsChartData() {
     // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlStateReasons = `${API_BASE_URL}/data/opportunity/statereasons?start=${format(selectedStartDate, 'MM/dd/yyyy')}&end=${format(selectedEndDate, 'MM/dd/yyyy')}&apiKey=${API_KEY}`;
+    const apiUrlStateReasons = `${API_BASE_URL}/data/opportunity/statereasons?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
     const responseStateReasons = await fetch(apiUrlStateReasons);
     const dataStateReasons = await responseStateReasons.json();
     // Process the API response data for the Opportunity State Reasons chart
@@ -253,12 +282,13 @@ async function fetchOpportunityChartData() {
     right: 0;
   }
 
-	.chart-card {
-	  border: 1px solid #ccc;
-	  border-radius: 8px;
-	  padding: 16px;
-	  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	}
+  .chart-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 10px; /* Add margin to create space between the charts */
+  }
 
 	main {
 	  display: flex;
