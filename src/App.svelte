@@ -36,6 +36,9 @@
 
   const daterangepicker = new DateRangePicker({
     placeholder: 'Select a range',
+    start: 'Year', 
+        depth: 'Year', 
+        format: 'MMM yyyy',
     value: [selectedStartDate, selectedEndDate],
     change: (args) => {
       if (args.value && args.value.length === 2) {
@@ -109,11 +112,26 @@ async function fetchOpportunityChartData() {
     const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
     const responseDays = await fetch(apiUrlDays);
     const dataDays = await responseDays.json();
-    const chartDataDays = sortChartDataByMonth(dataDays).map(item => ({
-        x: format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy'),
-        opportunities: item.opportunities,
-        days: item.days
-     }));
+    let currentYear = null;
+    let yearChanged = false;
+
+    const chartDataDays = sortChartDataByMonth(dataDays).map(item => {
+        const monthDate = format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy');
+        const year = monthDate.split(' ')[1];
+
+        if (currentYear !== year) {
+            currentYear = year;
+            yearChanged = true;
+        } else {
+            yearChanged = false;
+        }
+
+        return {
+            x: yearChanged ? monthDate : monthDate.split(' ')[0], // Display full date only when the year changes
+            opportunities: item.opportunities,
+            days: item.days
+        };
+    });
       console.log(chartDataDays);
 	  
 	  const chartDays = new Chart({
@@ -164,7 +182,9 @@ async function fetchOpportunityChartData() {
 		legendSettings: {
 		  visible: true,
 		},
-		tooltip: { enable: true, format: '${point.x}: ${point.y}' },
+		tooltip: {
+       enable: true, 
+      format: '${point.x}: ${point.y}' },
 		width: '100%',
 		height: '300px'
 	  });
@@ -181,54 +201,80 @@ async function fetchOpportunityChartData() {
     }),
   }));
 }
-  async function fetchOpportunityValueByUserChartData() {
-    // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
-    const responseOpportunity = await fetch(apiUrlOpportunity);
-    const dataOpportunity = await responseOpportunity.json();
-    const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
-	  const chartDataOpportunity = users.map(userName => ({
-		name: userName,
-		data: dataOpportunity.map(item => ({
-			  x: format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy'),
-		  y: item[userName]
-		}))
-	  }));
-	  const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
+async function fetchOpportunityValueByUserChartData() {
+  // Use selectedStartDate and selectedEndDate in the API call
+  const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
+  const responseOpportunity = await fetch(apiUrlOpportunity);
+  const dataOpportunity = await responseOpportunity.json();
+  const users = ['Andy Barnes', 'Bob Shaw', 'Gary Williams'];
 
-     console.log(chartDataOpportunity);
-  
-	  const chartOpportunity = new Chart({
-		primaryXAxis: {
-		  valueType: 'Category',
-		  majorGridLines: { width: 0 }
-		},
-		primaryYAxis: {
-		  labelFormat: '{value}',
-		  title: 'Opportunity Value',
-		  edgeLabelPlacement: 'Shift',
-		  majorTickLines: { width: 0 },
-		  lineStyle: { width: 0 },
-		},
-		series: sortedChartDataOpportunity.map(userData => ({
-    type: 'Column',
-    dataSource: userData.data,
-    xName: 'x',
-    width: 2,
-    yName: 'y',
-    name: userData.name,
-    columnSpacing: 0.1,
-  })),
-		legendSettings: {
-		  visible: true,
-		},
-		tooltip: { enable: true, format: '${point.x}: ${point.y}' },
-		width: '100%',
-		height: '300px'
-	  });
-  
-	  chartOpportunity.appendTo('#chart-container-opportunity');
-	};
+  // Create a map to organize data by year and month
+  const dataByYearMonth = new Map();
+  dataOpportunity.forEach(item => {
+    const monthYear = format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy');
+    if (!dataByYearMonth.has(monthYear)) {
+      dataByYearMonth.set(monthYear, { x: monthYear });
+    }
+    users.forEach(user => {
+      if (!dataByYearMonth.get(monthYear).hasOwnProperty(user)) {
+        dataByYearMonth.get(monthYear)[user] = 0;
+      }
+      dataByYearMonth.get(monthYear)[user] += item[user];
+    });
+  });
+
+  const sortedData = Array.from(dataByYearMonth.values()).sort((a, b) => {
+    const dateA = parse(a.x, 'MMMM yyyy', new Date());
+    const dateB = parse(b.x, 'MMMM yyyy', new Date());
+    return dateA - dateB;
+  });
+
+  const chartDataOpportunity = users.map(userName => ({
+    name: userName,
+    data: sortedData.map(item => ({
+      x: item.x,
+      y: item[userName],
+    })),
+  }));
+
+  const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
+
+  const chartOpportunity = new Chart({
+    primaryXAxis: {
+      valueType: 'Category',
+      majorGridLines: { width: 0 },
+    },
+    primaryYAxis: {
+      labelFormat: '{value}',
+      title: 'Opportunity Value',
+      edgeLabelPlacement: 'Shift',
+      majorTickLines: { width: 0 },
+      lineStyle: { width: 0 },
+    },
+    series: sortedChartDataOpportunity.map(userData => ({
+      type: 'Column',
+      dataSource: userData.data,
+      xName: 'x',
+      width: 2,
+      yName: 'y',
+      name: userData.name,
+      columnSpacing: 0.1,
+    })),
+    legendSettings: {
+      visible: true,
+    },
+    tooltip: {
+      enable: true,
+      format: '${point.x}: ${point.y}',
+    },
+    width: '100%',
+    height: '300px',
+  });
+
+  chartOpportunity.appendTo('#chart-container-opportunity');
+}
+
+
   
   async function fetchOpportunityStateReasonsChartData() {
     // Use selectedStartDate and selectedEndDate in the API call
@@ -297,12 +343,39 @@ async function fetchOpportunityChartData() {
     margin-top: 100px;
 	}
   
-	.card {
-    flex: 1; /* Set the flex property to distribute the cards evenly */
-    max-width: 300px; /* Set the maximum width for the cards */
+  .card {
+    flex: 1;
+    max-width: 300px;
     margin: 5px;
   }
 
+  /* Tooltip container style */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Position the tooltip above the card */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
   </style>
   <div class="center-container">
     <div id="wrapper">
@@ -310,31 +383,41 @@ async function fetchOpportunityChartData() {
     </div>
   </div>
   <body>
-	<main>
-	{#if data}
-	  <div class="card">
-		<Card title="Leads Converted" value={data.leadsConverted} icon="fal fa-lg fa-check-square" />
-	  </div>
-	  <div class="card">
-		<Card title="Opportunities" value={data.opportunityCountOpen} icon="fal fa-lg fa-fire" />
-	  </div>
-	  <div class="card">
-		<Card title="Won from {data.opportunityCountWon} deals" value=" GBP {data.opportunityValueWon}"icon="fas fa-dollar-sign" />
-	  </div>
-	  <div class="card">
-		<Card title="Avg. Deal Cycle" value={data.avgDealCycleDays} icon="fal fa-lg fa-stopwatch" />
-	  </div>
-	  <div class="card">
-		<Card title="Avg.Deal Value" value="GBP{data.avgDealValue}" icon="fas fa-dollar-sign"/>
-	  </div>
-	  <div class="card">
-		<Card title="Leads/Opportunity" value={data.leadsPerOpportunity} icon="fal fa-lg fa-crosshairs" />
-	  </div>
-	  <!-- Add more cards for other data points as needed -->
-	{:else}
-	  <p>Loading data...</p>
-	{/if}
-  </main>
+    <main>
+      {#if data}
+        <div class="card tooltip">
+          <Card title="Leads Converted" value={data.leadsConverted} icon="fal fa-lg fa-check-square" />
+          <span class="tooltiptext">Leads Converted</span>
+        </div>
+  
+        <div class="card tooltip">
+          <Card title="Opportunities" value={data.opportunityCountOpen} icon="fal fa-lg fa-fire" />
+          <span class="tooltiptext">Opportunities</span>
+        </div>
+  
+        <div class="card tooltip">
+          <Card title={`Won from ${data.opportunityCountWon} deals`} value={`GBP ${data.opportunityValueWon}`} icon="fas fa-dollar-sign" />
+          <span class="tooltiptext">Oppurtunity Deal Value</span>
+        </div>
+  
+        <div class="card tooltip">
+          <Card title="Avg. Deal Cycle" value={data.avgDealCycleDays} icon="fal fa-lg fa-stopwatch" />
+          <span class="tooltiptext">Avg. Deal Cycle Days</span>
+        </div>
+  
+        <div class="card tooltip">
+          <Card title="Avg. Deal Value" value={`GBP ${data.avgDealValue}`} icon="fas fa-dollar-sign" />
+          <span class="tooltiptext">Avg. Deal Value</span>
+        </div>
+  
+        <div class="card tooltip">
+          <Card title="Leads/Opportunity" value={data.leadsPerOpportunity} icon="fal fa-lg fa-crosshairs" />
+          <span class="tooltiptext">Avg.Leads Per Opportunity</span>
+        </div>
+      {:else}
+        <p>Loading data...</p>
+      {/if}
+    </main>
 	<div class="chart-card">
 	  <h2>Deal Lifecycle Days</h2>
 	  <div id='chart-container-days'></div>
