@@ -3,6 +3,7 @@
     export let title;
     export let value;
     export let icon;
+    
   </script>
   
   <div class="card">
