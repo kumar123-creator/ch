@@ -223,22 +223,40 @@ async function fetchOpportunityValueByUserChartData() {
     });
   });
 
+  // Sort the data and prepare it for the chart
   const sortedData = Array.from(dataByYearMonth.values()).sort((a, b) => {
     const dateA = parse(a.x, 'MMMM yyyy', new Date());
     const dateB = parse(b.x, 'MMMM yyyy', new Date());
     return dateA - dateB;
   });
 
+  // Modify the data to display the year label only when it changes
+  let currentYear = null;
+  let yearChanged = false;
+
   const chartDataOpportunity = users.map(userName => ({
     name: userName,
-    data: sortedData.map(item => ({
-      x: item.x,
-      y: item[userName],
-    })),
+    data: sortedData.map(item => {
+      const year = item.x.split(' ')[1];
+
+      if (currentYear !== year) {
+        currentYear = year;
+        yearChanged = true;
+      } else {
+        yearChanged = false;
+      }
+
+      return {
+        x: yearChanged ? item.x : item.x.split(' ')[0], // Display full date only when the year changes
+        y: item[userName],
+      };
+    }),
   }));
 
+  // Sort the data for the chart
   const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
 
+  // Create and configure the chart
   const chartOpportunity = new Chart({
     primaryXAxis: {
       valueType: 'Category',
