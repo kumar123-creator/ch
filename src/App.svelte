@@ -12,7 +12,6 @@
     const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
 
   let data = null;
-  let daterangepicker;
   let selectedStartDate = new Date(); // Today's date
   let selectedEndDate = new Date(); // Today's date
 
@@ -252,7 +251,7 @@ async function fetchOpportunityValueByUserChartData() {
       };
     }),
   }));
-
+console.log(sortedData);
   // Sort the data for the chart
   const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
 
