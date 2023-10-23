@@ -1,9 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
   import { DateRangePicker } from '@syncfusion/ej2-calendars';
-	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries } from '@syncfusion/ej2-charts';
+	import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
 	import { Browser } from '@syncfusion/ej2-base';
-	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries);
+	Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
 	import Card from './Card.svelte';
 	import { format, parse, compareAsc } from 'date-fns';
 
@@ -106,36 +106,43 @@ function sortChartDataByMonth(data) {
   });
 }
 
+
 async function fetchOpportunityChartData() {
     // Use selectedStartDate and selectedEndDate in the API call
     const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
     const responseDays = await fetch(apiUrlDays);
     const dataDays = await responseDays.json();
-    let currentYear = null;
-    let yearChanged = false;
 
-    const chartDataDays = sortChartDataByMonth(dataDays).map(item => {
-        const monthDate = format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMMM yyyy');
-        const year = monthDate.split(' ')[1];
 
-        if (currentYear !== year) {
-            currentYear = year;
-            yearChanged = true;
-        } else {
-            yearChanged = false;
-        }
+    const data = dataDays.map(item => {
+  const month = parseInt(item.monthLabel.split('/')[0]) - 1;
+  const year = parseInt(item.monthLabel.split('/')[1]);
+  const monthLabel = new Date(year, month, 1);
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short'
+  }).format(monthLabel);
 
-        return {
-            x: yearChanged ? monthDate : monthDate.split(' ')[0], // Display full date only when the year changes
-            opportunities: item.opportunities,
-            days: item.days
-        };
-    });
-      console.log(chartDataDays);
+  return {
+    x: formattedDate, // Format as "Jan 2023" (month name and year)
+    opportunities: item.opportunities,
+    days: item.days
+  };
+});
+
+// Sort the data by the 'x' property (which represents formatted month and year)
+data.sort((a, b) => {
+  const dateA = new Date('01 ' + a.x);
+  const dateB = new Date('01 ' + b.x);
+  return dateA - dateB;
+});
+
+
+      console.log(data);
 	  
 	  const chartDays = new Chart({
 		primaryXAxis: {
-		  valueType: 'Category',
+		  valueType: 'DateTime',
 		  majorGridLines: { width: 0 }
 		},
 		primaryYAxis: {
@@ -149,7 +156,7 @@ async function fetchOpportunityChartData() {
 		series: [
 		  {
 			type: 'Column',
-			dataSource: chartDataDays,
+			dataSource: data,
 			xName: 'x',
 			yName: 'opportunities',
 			name: 'Opportunities',
@@ -157,7 +164,7 @@ async function fetchOpportunityChartData() {
 		  },
 		  {
 			type: 'Spline',
-			dataSource: chartDataDays,
+			dataSource: data,
 			xName: 'x',
 			yName: 'days',
 			name: 'Avg Days to Deal',
@@ -190,6 +197,7 @@ async function fetchOpportunityChartData() {
   
 	  chartDays.appendTo('#chart-container-days');
   }
+  
   function sortChartDataOpportunity(chartDataOpportunity) {
   return chartDataOpportunity.map(userData => ({
     name: userData.name,
