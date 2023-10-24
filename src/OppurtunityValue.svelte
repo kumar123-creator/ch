@@ -1,9 +1,9 @@
 <script>
   import { onMount, afterUpdate } from 'svelte';
   import { dateStore } from './DateStore.js'; // Import the store
-import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
+import { Chart, StackingColumnSeries,ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
 import { Browser } from '@syncfusion/ej2-base';
-Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
+Chart.Inject(StackingColumnSeries,ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
 import Card from './MetricsCard.svelte';
 import { format, parse, compareAsc } from 'date-fns';
 
@@ -86,7 +86,7 @@ return chartDataOpportunity.map(userData => ({
     });
 
     
-  
+    const colors = [ 'DodgerBlue', 'Tomato', 'Gold', 'LimeGreen', 'Purple', 'Orange', 'Crimson', 'RoyalBlue'];
     // Initialize variables for tracking the last year and storing the transformed data
     let lastYear = null;
     let transformedChartData = [];
@@ -129,12 +129,13 @@ return chartDataOpportunity.map(userData => ({
         majorTickLines: { width: 0 },
         lineStyle: { width: 0 },
       },
-      series: sortedChartDataOpportunity.map(userData => ({
-        type: 'Column',
+      series: sortedChartDataOpportunity.map((userData, index) => ({
+        type: 'StackingColumn',
         dataSource: userData.data,
         xName: 'x',
         width: 2,
         yName: 'y',
+        fill: colors[index],
         name: userData.name,
         columnSpacing: 0.1,
       })),

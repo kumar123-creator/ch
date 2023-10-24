@@ -1,7 +1,7 @@
 <script>
   import { onMount, afterUpdate } from 'svelte';
   import { dateStore } from './DateStore.js'; // Import the store
-import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
+import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime, } from '@syncfusion/ej2-charts';
 import { Browser } from '@syncfusion/ej2-base';
 Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
 import Card from './MetricsCard.svelte';
@@ -76,6 +76,7 @@ async function fetchOpportunityStateReasonsChartData(startDate, endDate) {
         width: 2,
         yName: 'y',
         name: 'Count',
+        fill: 'Dodgerblue',
         columnSpacing: 0.1,
       },
     ],
@@ -90,7 +91,12 @@ async function fetchOpportunityStateReasonsChartData(startDate, endDate) {
     font-weight: bold;
     font-size: large;
   }
-.center-container {
+  .chart-card:last-child {
+    margin: 0;
+    padding: 0;
+  }
+
+  .center-container {
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
@@ -105,16 +111,15 @@ async function fetchOpportunityStateReasonsChartData(startDate, endDate) {
     border-radius: 8px;
     padding: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 10px; /* Add margin to create space between the charts */
   }
 
-	main {
-	  display: flex;
-	  flex-wrap: wrap;
-	  justify-content: center;
+  main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     margin-top: 100px;
-	}
-  
+  }
+
   .card {
     flex: 1;
     max-width: 300px;
@@ -148,8 +153,6 @@ async function fetchOpportunityStateReasonsChartData(startDate, endDate) {
     visibility: visible;
     opacity: 1;
   }
-  
- 
 </style>
 <body>
 <div class="chart-card">

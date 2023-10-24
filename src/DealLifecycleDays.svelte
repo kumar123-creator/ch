@@ -101,7 +101,7 @@ data.sort((a, b) => {
 	  
 	  const chartDays = new Chart({
 		primaryXAxis: {
-		  valueType: 'DateTime',
+		  valueType: 'Category',
 		  majorGridLines: { width: 0 }
 		},
 		primaryYAxis: {
@@ -119,6 +119,7 @@ data.sort((a, b) => {
 			xName: 'x',
 			yName: 'opportunities',
 			name: 'Opportunities',
+      fill: 'DodgerBlue',
 			columnSpacing: 0.1,
 		  },
 		  {
@@ -128,7 +129,7 @@ data.sort((a, b) => {
 			yName: 'days',
 			name: 'Avg Days to Deal',
 			yAxisName: 'rightYAxis',
-      fill: 'blue',
+      fill: 'Purple',
 			marker: {
 			  visible: true,
 			  height: 10,
