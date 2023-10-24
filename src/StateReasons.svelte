@@ -94,28 +94,71 @@ async function fetchOpportunityStateReasonsChartData() {
 </script>
 
 <style>
-.chart-card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
+  h2 {
+    font-weight: bold;
+    font-size: large;
+  }
 .center-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  margin-top: 60px;
-  position: absolute;
-  top: 0;
-  right: 0;
-}
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    margin-top: 60px;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .chart-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 10px; /* Add margin to create space between the charts */
+  }
+
+	main {
+	  display: flex;
+	  flex-wrap: wrap;
+	  justify-content: center;
+    margin-top: 100px;
+	}
+  
+  .card {
+    flex: 1;
+    max-width: 300px;
+    margin: 5px;
+  }
+
+  /* Tooltip container style */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Position the tooltip above the card */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+ 
 </style>
-<div class="center-container">
-<div id="wrapper">
-  <input id="daterangepicker" type="text" /><br/><br/>
-</div>
-</div>
 <body>
 <div class="chart-card">
   <h2>Opportunity State Reasons</h2>

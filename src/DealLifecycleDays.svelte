@@ -9,12 +9,8 @@ import { format, parse, compareAsc } from 'date-fns';
 
 const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
     const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
-  let chartDataDays = [];
-  let selectedStartDate = new Date(); // Today's date
+    let selectedStartDate = new Date(); // Today's date
   let selectedEndDate = new Date(); // Today's date
-
-  // Calculate the start date (one year before today)
-  selectedStartDate.setFullYear(selectedStartDate.getFullYear() - 1);
 
   onMount(async () => {
   // Check if a date range is stored in local storage
@@ -58,15 +54,6 @@ const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
  
 });
 
-
-
-function sortChartDataByMonth(data) {
-  return data.sort((a, b) => {
-    const dateA = parse(a.monthLabel, 'MM/yyyy', new Date());
-    const dateB = parse(b.monthLabel, 'MM/yyyy', new Date());
-    return dateA - dateB;
-  });
-}
 
 async function fetchOpportunityChartData() {
     // Use selectedStartDate and selectedEndDate in the API call
@@ -159,18 +146,15 @@ data.sort((a, b) => {
 	  chartDays.appendTo('#chart-container-days');
   }
 </script>
-<div class="center-container">
-  <div id="wrapper">
-    <input id="daterangepicker" type="text" /><br/><br/>
-  </div>
-  </div>
+
 
 <div class="chart-card">
   <h2>Deal Lifecycle Days</h2>
   <div id='chart-container-days'></div>
 </div>
 <style>
-  .center-container {
+  
+.center-container {
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
@@ -179,10 +163,57 @@ data.sort((a, b) => {
     top: 0;
     right: 0;
   }
+
   .chart-card {
     border: 1px solid #ccc;
     border-radius: 8px;
     padding: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 10px; /* Add margin to create space between the charts */
+  }
+
+	main {
+	  display: flex;
+	  flex-wrap: wrap;
+	  justify-content: center;
+    margin-top: 100px;
+	}
+  
+  .card {
+    flex: 1;
+    max-width: 300px;
+    margin: 5px;
+  }
+
+  /* Tooltip container style */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Position the tooltip above the card */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+  h2 {
+    font-weight: bold;
+    font-size: large;
   }
   </style>
