@@ -17,7 +17,7 @@
   </div>
   
   <style>
-    .card {
+       .card {
       border: 1px solid #ccc;
       padding: 10px;
       text-align: center;
@@ -35,4 +35,3 @@
       margin-top: 10px;
     }
   </style>
-  

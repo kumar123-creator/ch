@@ -1,63 +1,74 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, afterUpdate } from 'svelte';
+  import { dateStore } from './DateStore.js'; // Import the store
 import { DateRangePicker } from '@syncfusion/ej2-calendars';
 import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
 import { Browser } from '@syncfusion/ej2-base';
 Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
-import Card from './Card.svelte';
+import Card from './MetricsCard.svelte';
 import { format, parse, compareAsc } from 'date-fns';
 
 const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
     const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
-    let selectedStartDate = new Date(); // Today's date
-  let selectedEndDate = new Date(); // Today's date
-
-  onMount(async () => {
-  // Check if a date range is stored in local storage
-  const storedStartDate = localStorage.getItem('selectedStartDate');
-  const storedEndDate = localStorage.getItem('selectedEndDate');
-
-  if (storedStartDate && storedEndDate) {
-    selectedStartDate = new Date(storedStartDate);
-    selectedEndDate = new Date(storedEndDate);
-  } else {
-    // If no date range is found in local storage, use the default date range
-    selectedStartDate = new Date();
-    selectedEndDate = new Date();
-    selectedStartDate.setFullYear(selectedStartDate.getFullYear() - 1);
-  }
-
-  const daterangepicker = new DateRangePicker({
-    placeholder: 'Select a range',
-    start: 'Year', 
-        depth: 'Year', 
-        format: 'MMM yyyy',
-    value: [selectedStartDate, selectedEndDate],
-    change: (args) => {
-      if (args.value && args.value.length === 2) {
-        selectedStartDate = args.value[0];
-        selectedEndDate = args.value[1];
-        localStorage.setItem('selectedStartDate', selectedStartDate);
-        localStorage.setItem('selectedEndDate', selectedEndDate);
-       
-        fetchOpportunityChartData();
-        
-      }
-    },
-  });
-
-  daterangepicker.appendTo('#daterangepicker');
-
-  // Call data-fetching functions with the selected date range
-
-  await fetchOpportunityChartData();
+    const currentDate = new Date();
+     const currentYear = currentDate.getFullYear();
  
-});
+     let startDate = '';
+     let endDate = '';
+ 
+     // Calculate the start and end date objects
+     const startDateObj = new Date(startDate);
+     const endDateObj = new Date(endDate);
+ 
+     // Calculate the range of months between the start and end date
+     const startYear = startDateObj.getFullYear();
+     const endYear = endDateObj.getFullYear();
+     const startMonth = startDateObj.getMonth();
+     const endMonth = endDateObj.getMonth();
+ 
+     const monthNames = [];
+ 
+     for (let year = startYear; year <= endYear; year++) {
+         const start = (year === startYear) ? startMonth : 0;
+         const end = (year === endYear) ? endMonth : 11;
+ 
+         for (let month = start; month <= end; month++) {
+             monthNames.push(`${year} ${new Date(year, month, 1).toLocaleString('default', { month: 'short' })}`);
+         }
+     }
+ 
+ 
+     function getDatesFromLocalStorage() {
+     const storedStartDate = localStorage.getItem('startDate');
+     const storedEndDate = localStorage.getItem('endDate');
+ 
+     if (storedStartDate && storedEndDate) {
+       startDate = storedStartDate;
+       endDate = storedEndDate;
+     }
+   }
+ 
+   // Subscribe to the dateStore
+   dateStore.subscribe((value) => {
+     startDate = value.startDate;
+     endDate = value.endDate;
+     fetchOpportunityChartData(startDate, endDate); // Fetch data whenever the date changes
+   });
 
-
-async function fetchOpportunityChartData() {
+   onMount(() => {
+     getDatesFromLocalStorage(); // Try to get dates from local storage
+     fetchOpportunityChartData(startDate, endDate); // Fetch data on component mount
+   });
+ 
+   afterUpdate(() => {
+     fetchOpportunityChartData(startDate, endDate); // Fetch data after updates
+     // Store the dates in local storage for future use
+     localStorage.setItem('startDate', startDate);
+     localStorage.setItem('endDate', endDate);
+   });
+async function fetchOpportunityChartData(startDate, endDate) {
     // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
+    const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${startDate}&end=${endDate}&apiKey=${API_KEY}`;
     const responseDays = await fetch(apiUrlDays);
     const dataDays = await responseDays.json();
 

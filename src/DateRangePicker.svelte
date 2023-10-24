@@ -84,12 +84,13 @@
 
   .calendar-container {
       position: absolute;
-      top: 50px; 
+      top: 0px; 
       right: 15px; 
       width: 300px;
       height: 60px;
       text-align: center;
       align-items: center; 
+      margin-top: 0;
   
     }
     

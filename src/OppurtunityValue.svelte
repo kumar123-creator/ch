@@ -1,64 +1,49 @@
 <script>
-  import { onMount } from 'svelte';
-import { DateRangePicker } from '@syncfusion/ej2-calendars';
+  import { onMount, afterUpdate } from 'svelte';
+  import { dateStore } from './DateStore.js'; // Import the store
 import { Chart, ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
 import { Browser } from '@syncfusion/ej2-base';
 Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
-import Card from './Card.svelte';
+import Card from './MetricsCard.svelte';
 import { format, parse, compareAsc } from 'date-fns';
 
 const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
   const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
-  let chartData = [];
-  let data = null;
-let selectedStartDate = new Date(); // Today's date
-let selectedEndDate = new Date(); // Today's date
 
-// Calculate the start date (one year before today)
-selectedStartDate.setFullYear(selectedStartDate.getFullYear() - 1);
+  let chartData = []; // Initialize with an empty array
+    let startDate = '';
+    let endDate = '';
+    let userNames = []; // Array to hold user names
+ 
 
-onMount(async () => {
-// Check if a date range is stored in local storage
-const storedStartDate = localStorage.getItem('selectedStartDate');
-const storedEndDate = localStorage.getItem('selectedEndDate');
+    // Function to check if local storage has date information
+    function getDatesFromLocalStorage() {
+        const storedStartDate = localStorage.getItem('startDate');
+        const storedEndDate = localStorage.getItem('endDate');
 
-if (storedStartDate && storedEndDate) {
-selectedStartDate = new Date(storedStartDate);
-selectedEndDate = new Date(storedEndDate);
-} else {
-// If no date range is found in local storage, use the default date range
-selectedStartDate = new Date();
-selectedEndDate = new Date();
-selectedStartDate.setFullYear(selectedStartDate.getFullYear() - 1);
-}
+        if (storedStartDate && storedEndDate) {
+            startDate = storedStartDate;
+            endDate = storedEndDate;
+        }
+    }
 
-const daterangepicker = new DateRangePicker({
-placeholder: 'Select a range',
-start: 'Year', 
-    depth: 'Year', 
-    format: 'MMM yyyy',
-value: [selectedStartDate, selectedEndDate],
-change: (args) => {
-  if (args.value && args.value.length === 2) {
-    selectedStartDate = args.value[0];
-    selectedEndDate = args.value[1];
-    localStorage.setItem('selectedStartDate', selectedStartDate);
-    localStorage.setItem('selectedEndDate', selectedEndDate);
-  
-  
-    fetchOpportunityValueByUserChartData();
-  
-  }
-},
-});
+    // Subscribe to the dateStore
+    dateStore.subscribe((value) => {
+        startDate = value.startDate;
+        endDate = value.endDate;
+        fetchOpportunityValueByUserChartData(startDate, endDate); // Fetch data whenever the date changes
+    });
 
-daterangepicker.appendTo('#daterangepicker');
+    onMount(() => {
+        getDatesFromLocalStorage();
+        fetchOpportunityValueByUserChartData(startDate, endDate);
+    });
 
-// Call data-fetching functions with the selected date range
-
-await fetchOpportunityValueByUserChartData();
-
-});
+    afterUpdate(() => {
+        fetchOpportunityValueByUserChartData(startDate, endDate);
+        localStorage.setItem('startDate', startDate);
+        localStorage.setItem('endDate', endDate);
+    });
 function sortChartDataOpportunity(chartDataOpportunity) {
 return chartDataOpportunity.map(userData => ({
   name: userData.name,
@@ -69,9 +54,9 @@ return chartDataOpportunity.map(userData => ({
   }),
 }));
 }
-  async function fetchOpportunityValueByUserChartData() {
+  async function fetchOpportunityValueByUserChartData(startDate, endDate) {
     // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${format(selectedStartDate, 'dd/MM/yyyy')}&end=${format(selectedEndDate, 'dd/MM/yyyy')}&apiKey=${API_KEY}`;
+    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${startDate}&end=${endDate}&apiKey=${API_KEY}`;
     const responseOpportunity = await fetch(apiUrlOpportunity);
     const dataOpportunity = await responseOpportunity.json();
 
