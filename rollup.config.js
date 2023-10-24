@@ -34,7 +34,7 @@ export default {
 	output: {
 		sourcemap: true,
 		format: 'iife',
-		name: 'app',
+		name: 'RecruitlyCRMChart',
 		file: 'public/build/bundle.js'
 	},
 	plugins: [

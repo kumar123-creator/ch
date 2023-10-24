@@ -8,11 +8,10 @@ Chart.Inject(ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,B
 import Card from './MetricsCard.svelte';
 import { format, parse, compareAsc } from 'date-fns';
 
-const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
-    const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
+
     const currentDate = new Date();
      const currentYear = currentDate.getFullYear();
- 
+     export let appData;
      let startDate = '';
      let endDate = '';
  
@@ -68,7 +67,7 @@ const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
    });
 async function fetchOpportunityChartData(startDate, endDate) {
     // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlDays = `${API_BASE_URL}/data/opportunitymonthlymetrics?start=${startDate}&end=${endDate}&apiKey=${API_KEY}`;
+    const apiUrlDays = `${appData.service.endpoint}/dashboard/sales/data/oppurtunitymonthlymetrics?start=${startDate}&end=${endDate}&apiKey=${appData.service.apiKey}`;
     const responseDays = await fetch(apiUrlDays);
     const dataDays = await responseDays.json();
 

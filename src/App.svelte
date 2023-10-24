@@ -4,6 +4,8 @@
   import DealLifeCycleDays from './DealLifeCycleDays.svelte';
   import OppurtunityValue from './OppurtunityValue.svelte';
   import StateReasons from './StateReasons.svelte';
+
+  export let appData;
   </script>
 
   <body>

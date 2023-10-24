@@ -223,9 +223,9 @@ return chartDataOpportunity.map(userData => ({
     font-size: large;
   }
 </style>
-<body>
+
 <div class="chart-card">
   <h2>Opportunity Value by User</h2>
   <div id='chart-container-opportunity'></div>
 </div>
-</body>
+

@@ -1,11 +1,12 @@
-
 import App from "./App.svelte";
 
-const app = new App({
-  target: document.body,
-  props: {
-    name: "world",
-  },
-});
-
-export default app;
+export default class RecruitlyCRMChart {
+  constructor(data) {
+    this.app = new App({
+      target: document.getElementById(data.renderTo),
+      props: {
+        appData: data,
+      },
+    });
+  }
+}
