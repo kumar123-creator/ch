@@ -1,156 +1,162 @@
 <script>
   import { onMount, afterUpdate } from 'svelte';
+  import { Chart, StackingColumnSeries, Category, DataLabel, Tooltip, Legend,Highlight } from '@syncfusion/ej2-charts';
+  import { Browser } from '@syncfusion/ej2-base';
   import { dateStore } from './DateStore.js'; // Import the store
-import { Chart, StackingColumnSeries,ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries, BarSeries, DateTime } from '@syncfusion/ej2-charts';
-import { Browser } from '@syncfusion/ej2-base';
-Chart.Inject(StackingColumnSeries,ColumnSeries, LineSeries, Category, Legend, Tooltip, SplineSeries,BarSeries, DateTime);
-import Card from './MetricsCard.svelte';
-import { format, parse, compareAsc } from 'date-fns';
+  Chart.Inject(StackingColumnSeries, Category, DataLabel, Tooltip, Legend, Highlight);
 
-const API_BASE_URL = 'https://api.recruitly.io/api/dashboard/sales';
-  const API_KEY = 'TEST45684CB2A93F41FC40869DC739BD4D126D77';
-
+  export let appData;
   let chartData = []; // Initialize with an empty array
-    let startDate = '';
-    let endDate = '';
-    let userNames = []; // Array to hold user names
- 
+  let startDate = '';
+  let endDate = '';
+  let userNames = []; // Array to hold user names
 
-    // Function to check if local storage has date information
-    function getDatesFromLocalStorage() {
-        const storedStartDate = localStorage.getItem('startDate');
-        const storedEndDate = localStorage.getItem('endDate');
 
-        if (storedStartDate && storedEndDate) {
-            startDate = storedStartDate;
-            endDate = storedEndDate;
-        }
-    }
+  // Function to check if local storage has date information
+  function getDatesFromLocalStorage() {
+      const storedStartDate = localStorage.getItem('startDate');
+      const storedEndDate = localStorage.getItem('endDate');
 
-    // Subscribe to the dateStore
-    dateStore.subscribe((value) => {
-        startDate = value.startDate;
-        endDate = value.endDate;
-        fetchOpportunityValueByUserChartData(startDate, endDate); // Fetch data whenever the date changes
-    });
-
-    onMount(() => {
-        getDatesFromLocalStorage();
-        fetchOpportunityValueByUserChartData(startDate, endDate);
-    });
-
-    afterUpdate(() => {
-        fetchOpportunityValueByUserChartData(startDate, endDate);
-        localStorage.setItem('startDate', startDate);
-        localStorage.setItem('endDate', endDate);
-    });
-function sortChartDataOpportunity(chartDataOpportunity) {
-return chartDataOpportunity.map(userData => ({
-  name: userData.name,
-  data: userData.data.sort((a, b) => {
-    const dateA = parse(a.x, 'MM/yyyy', new Date());
-    const dateB = parse(b.x, 'MM/yyyy', new Date());
-    return dateA - dateB;
-  }),
-}));
-}
-  async function fetchOpportunityValueByUserChartData(startDate, endDate) {
-    // Use selectedStartDate and selectedEndDate in the API call
-    const apiUrlOpportunity = `${API_BASE_URL}/data/opportunitymonthlyusermetrics?start=${startDate}&end=${endDate}&apiKey=${API_KEY}`;
-    const responseOpportunity = await fetch(apiUrlOpportunity);
-    const dataOpportunity = await responseOpportunity.json();
-
-    // Extract user names dynamically from the data
-    const users = Object.keys(dataOpportunity[0]).filter(key => key !== 'monthLabel');
-
-    // Create a map to organize data by year and month
-    const dataByYearMonth = new Map();
-    dataOpportunity.forEach(item => {
-      const monthYear = format(parse(item.monthLabel, 'MM/yyyy', new Date()), 'MMM yyyy');
-      if (!dataByYearMonth.has(monthYear)) {
-        dataByYearMonth.set(monthYear, { x: monthYear });
+      if (storedStartDate && storedEndDate) {
+          startDate = storedStartDate;
+          endDate = storedEndDate;
       }
-      users.forEach(user => {
-        if (!dataByYearMonth.get(monthYear).hasOwnProperty(user)) {
-          dataByYearMonth.get(monthYear)[user] = 0;
-        }
-        dataByYearMonth.get(monthYear)[user] += item[user];
-      });
-    });
+  }
 
-    // Sort the data and prepare it for the chart
-    const sortedData = Array.from(dataByYearMonth.values()).sort((a, b) => {
-      const dateA = parse(a.x, 'MMM yyyy', new Date());
-      const dateB = parse(b.x, 'MMM yyyy', new Date());
-      return dateA - dateB;
-    });
+  // Subscribe to the dateStore
+  dateStore.subscribe((value) => {
+      startDate = value.startDate;
+      endDate = value.endDate;
+      fetchOpportunityValueByUserChartData(startDate, endDate); // Fetch data whenever the date changes
+  });
 
-    
-    const colors = [ 'DodgerBlue', 'Tomato', 'Gold', 'LimeGreen', 'Purple', 'Orange', 'Crimson', 'RoyalBlue'];
-    // Initialize variables for tracking the last year and storing the transformed data
-    let lastYear = null;
-    let transformedChartData = [];
+  onMount(() => {
+      getDatesFromLocalStorage();
+      fetchOpportunityValueByUserChartData(startDate, endDate);
+  });
 
-    // Process the data and format the x values
-    const chartDataOpportunity = users.map(userName => ({
-        name: userName,
-        data: sortedData.map(item => {
-            const dateParts = item.x.split(' ');
-            const monthAbbreviation = dateParts[0];
-            const year = dateParts[1];
+  afterUpdate(() => {
+      fetchOpportunityValueByUserChartData(startDate, endDate);
+      updateChart();
+      localStorage.setItem('startDate', startDate);
+      localStorage.setItem('endDate', endDate);
+  });
 
-            // Append the year to the abbreviation only if it's different from the last year or the first data point
-            const formattedDate = (lastYear !== year || transformedChartData.length === 0) ? `${monthAbbreviation} ${year}` : monthAbbreviation;
+  async function fetchOpportunityValueByUserChartData(startDate, endDate) {
+      try {
+          const response = await fetch(
+            `${appData.service.endpoint}/dashboard/sales/data/opportunitymonthlyusermetrics?start=${startDate}&end=${endDate}&apiKey=${appData.service.apiKey}`
+          );
+               if (response.ok) {
+              const jsonData = await response.json();
+              console.log(jsonData);
 
-            if (lastYear !== year) {
-                lastYear = year; // Reset lastYear to the current year if it changes
-            }
+              const monthNames = [...new Set(jsonData.map((item) => item.monthLabel))];
 
-            return {
-                x: formattedDate,
-                y: item[userName],
-            };
-        }),
-    }));
+                        // Sort the month names in ascending order
+                        monthNames.sort((a, b) => {
+                            const [aMonth, aYear] = a.split('/');
+                            const [bMonth, bYear] = b.split('/');
+                            if (+aYear !== +bYear) {
+                                return +aYear - +bYear;
+                            } else {
+                                return +aMonth - +bMonth;
+                            }
+                        });
 
-    // Sort the data for the chart
-    const sortedChartDataOpportunity = sortChartDataOpportunity(chartDataOpportunity);
+              // Dynamically extract user names from the data
+              userNames = Object.keys(jsonData[0]).filter((key) => key !== 'monthLabel');
 
-    // Create and configure the chart
-    const chartOpportunity = new Chart({
-      primaryXAxis: {
-        valueType: 'Category',
-        majorGridLines: { width: 0 },
-      },
-      primaryYAxis: {
-        labelFormat: '{value}',
-        title: 'Opportunity Value',
-        edgeLabelPlacement: 'Shift',
-        majorTickLines: { width: 0 },
-        lineStyle: { width: 0 },
-      },
-      series: sortedChartDataOpportunity.map((userData, index) => ({
-        type: 'StackingColumn',
-        dataSource: userData.data,
-        xName: 'x',
-        width: 2,
-        yName: 'y',
-        fill: colors[index],
-        name: userData.name,
-        columnSpacing: 0.1,
-      })),
-      legendSettings: {
-        visible: true,
-      },
-      tooltip: {
+              // Transform API data into the format suitable for the chart
+              chartData = monthNames.map((monthName) => {
+                  const monthData = jsonData.filter((item) => item.monthLabel === monthName);
+
+                  const transformedData = { x: monthName };
+                  userNames.forEach((userName) => {
+                      transformedData[userName] = monthData.reduce((total, item) => total + item[userName], 0) / 1;
+                  });
+
+                  return transformedData;
+              });
+
+              // After fetching data, update the chart
+              updateChart();
+          } else {
+              console.error('Failed to fetch data from the API. HTTP status:', response.status);
+          }
+      } catch (error) {
+          console.error('An error occurred while fetching data:', error);
+      }
+  }
+
+  const colors = [ 'DodgerBlue', 'Tomato', 'Gold', 'LimeGreen', 'Purple', 'Orange', 'Crimson', 'RoyalBlue'];
+
+
+  // Function to create or update the chart
+
+  function updateChart() {
+      let lastYear = null;
+      chartData = chartData.map((item, index) => {
+  const dateParts = item.x.split('/');
+  const month = parseInt(dateParts[0]);
+  const year = parseInt(dateParts[1]);
+
+  const monthAbbreviation = new Date(year, month - 1, 1).toLocaleString('default', { month: 'short' });
+
+  // Display both the year and month
+  const formattedDate = `${monthAbbreviation} ${year}`;
+
+  return {
+      x: formattedDate,
+      ...userNames.reduce((acc, userName) => {
+          acc[userName] = item[userName];
+          return acc;
+      }, {}),
+  };
+});
+        // Create and append the chart with the updated data source
+        const chart = new Chart({
+            primaryXAxis: {
+                valueType: 'Category',
+                majorGridLines: { width: 0 },
+                
+                labelStyle: {
+                    size: '15px',
+                    fontWeight: 'normal',
+                },
+            },
+            primaryYAxis: {
+                edgeLabelPlacement: 'Shift',
+                majorTickLines: { width: 0 },
+                minorTickLines: { width: 0 },
+                lineStyle: { width: 0 },
+                labelFormat: '{value}',
+                labelPlacement: 'OnTicks',
+                title: 'Oppurtunity value',
+                labelStyle: {
+                    size: '15px',
+                    fontWeight: 'normal',
+                },
+            },
+            height: '350px',
+            series: userNames.map((userName, index) => ({
+                type: 'StackingColumn',
+                dataSource: chartData,
+                xName: 'x',
+                width: 2,
+                fill: colors[index],
+                yName: userName,
+                columnSpacing: 0.2,
+                name: userName,
+                columnWidth: 0.5,
+            })),
+            tooltip: {
         enable: true,
         format: '${point.x}: ${point.y}',
       },
-      width: '100%',
-      height: '300px',
-    });
-
-    chartOpportunity.appendTo('#chart-container-opportunity');
+            legendSettings: { enableHighlight: true },
+        });
+        chart.appendTo('#chart-container-opportunity');
   }
 
 
@@ -227,5 +233,4 @@ return chartDataOpportunity.map(userData => ({
 <div class="chart-card">
   <h2>Opportunity Value by User</h2>
   <div id='chart-container-opportunity'></div>
-</div>
-
+</div> 

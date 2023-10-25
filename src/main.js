@@ -1,5 +1,4 @@
 import App from "./App.svelte";
-
 export default class RecruitlyCRMChart {
   constructor(data) {
     this.app = new App({
